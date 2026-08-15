@@ -4,13 +4,12 @@
 
 'use strict';
 
-let workspace;
-
 function initApp() {
   // Мова Blockly вже завантажена через <script src=".../msg/uk.js">
   const toolboxXml = document.getElementById('toolbox');
 
-  workspace = Blockly.inject('blockly-div', {
+  // exposed на window для e2e-тестів через playwright
+  window.workspace = Blockly.inject('blockly-div', {
     toolbox: toolboxXml,
     trashcan: true,
     scrollbars: true,
@@ -36,7 +35,7 @@ function initApp() {
       <block type="turtle_forward" x="20" y="20"></block>
     </xml>
   `;
-  Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(defaultXml), workspace);
+  Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(defaultXml), window.workspace);
 
   // Init level
   initLevel();
@@ -49,7 +48,7 @@ function initApp() {
   });
 
   // Resize handling
-  const onResize = () => Blockly.svgResize(workspace);
+  const onResize = () => Blockly.svgResize(window.workspace);
   window.addEventListener('resize', onResize);
   onResize();
 }

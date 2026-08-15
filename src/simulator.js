@@ -15,6 +15,11 @@
 const TILE_SIZE = 40;        // px, розмір однієї клітинки у SVG
 const COLS = 12;             // ширина world у клітинках
 const ROWS = 9;              // висота world
+
+// Expose константи та state на window для e2e-тестів
+if (typeof window !== 'undefined') {
+  window._puzzles = { TILE_SIZE, COLS, ROWS };
+}
 const SCENE_W = TILE_SIZE * COLS;   // 480px
 const SCENE_H = TILE_SIZE * ROWS;   // 360px
 
@@ -40,7 +45,8 @@ const TEXTURE_URL = {
 
 // Level 1 map — 12 колонок × 9 рядків.
 // Layout: sky зверху, поверхня-grass, підземелля-dirt+stone.
-// Тунель: turtle стартує на поверхні (2,2) → forward → down → forward → down → forward → diamond.
+// Тунель: (2,2) стартова позиція → forward → down×2 → forward×4 → down → diamond (7,7).
+// Всього 8 кроків.
 //
 // Legend: . = AIR (небо/тунель), G = grass, D = dirt, S = stone,
 //         C = cobblestone, B = bedrock, ◆ = diamond, ► = START
@@ -49,12 +55,12 @@ const TEXTURE_URL = {
 const LEVEL_1 = [
   '............',  // 0 — sky
   '............',  // 1 — sky
-  '..►.........',  // 2 — turtle starts here (on grass surface)
-  'GGGG.GGGGGGG',  // 3 — surface (тунель починається на col 4)
-  'DDDD.DDDDDDD',  // 4 — dirt layer (тунель продовжується вниз)
-  'DDDDDD.DDDDD',  // 5 — dirt (тунель повертає праворуч)
-  'SSSSSS.SSSSS',  // 6 — stone (тунель вниз)
-  'SSSSSSS◆SSSS',  // 7 — stone + DIAMOND
+  '..►.........',  // 2 — turtle starts here (on grass surface at col 2)
+  'GGG.GGGGGGGG',  // 3 — surface (тунель entrance at col 3)
+  'DDD.DDDDDDDD',  // 4 — dirt (тунель col 3 продовжується вниз)
+  'DDD......DDD',  // 5 — dirt (тунель повертає праворуч col 3→8)
+  'SSSSSSS◆SSSS',  // 6 — stone + DIAMOND at col 7
+  'SSSSSSSSSSSS',  // 7 — stone
   'BBBBBBBBBBBB',  // 8 — bedrock floor
 ];
 
@@ -62,6 +68,7 @@ const LEVEL_1 = [
 // Level state
 //////////////////////////////////////////////////////////////////////
 
+// Все state exposed на window щоб e2e-тести могли інспектувати
 let map;              // 2D array [row][col] → TILE value
 let startPos;         // {x, y} у клітинках
 let finishPos;        // {x, y}
@@ -69,6 +76,17 @@ let turtleX;          // поточна позиція turtle
 let turtleY;
 let log;              // array of [action, block_id] tuples (для animate)
 const pidList = [];   // pending setTimeout IDs (для reset)
+
+function _exposeState() {
+  if (typeof window === 'undefined') return;
+  window.map = map;
+  window.startPos = startPos;
+  window.finishPos = finishPos;
+  window.turtleX = turtleX;
+  window.turtleY = turtleY;
+  window.log = log;
+  window.lastResult = lastResult;
+}
 
 // Outcome enum (як у Blockly Games)
 const Result = {
@@ -332,6 +350,7 @@ function executeUserCode() {
   }
 
   // Log зібрано, стартуємо анімацію
+  _exposeState();
   scheduleAnimation();
 }
 
@@ -367,6 +386,7 @@ function scheduleAnimation() {
 function animateStep() {
   if (animIndex >= log.length) {
     // Кінець анімації → показати підсумок
+    _exposeState();
     showFinalResult();
     return;
   }
@@ -493,4 +513,5 @@ function initLevel() {
 
   drawMap();
   displayTurtle(turtleX, turtleY);
+  _exposeState();
 }

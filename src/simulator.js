@@ -154,19 +154,44 @@ function drawMap() {
   scene.setAttribute('viewBox', `0 0 ${SCENE_W} ${SCENE_H}`);
   scene.innerHTML = '';
 
-  // Sky gradient background
+  // Знаходимо surfaceRow — найвищий рядок з grass. Все нижче = підземелля.
+  let surfaceRow = ROWS;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (map[y][x] === TILE.GRASS) { surfaceRow = y; break; }
+    }
+    if (surfaceRow < ROWS) break;
+  }
+
+  // Sky gradient background — тільки над surface
   const defs = svg('defs', {}, scene);
-  const grad = svg('linearGradient', {
+  const skyGrad = svg('linearGradient', {
     id: 'sky-gradient', x1: '0', y1: '0', x2: '0', y2: '1'
   }, defs);
-  svg('stop', { offset: '0%', 'stop-color': '#87CEEB' }, grad);
-  svg('stop', { offset: '100%', 'stop-color': '#B0E0E6' }, grad);
+  svg('stop', { offset: '0%', 'stop-color': '#87CEEB' }, skyGrad);
+  svg('stop', { offset: '100%', 'stop-color': '#B0E0E6' }, skyGrad);
 
+  // Underground gradient — темний, легкий brown-tint (як у Minecraft cave)
+  const undGrad = svg('linearGradient', {
+    id: 'underground-gradient', x1: '0', y1: '0', x2: '0', y2: '1'
+  }, defs);
+  svg('stop', { offset: '0%', 'stop-color': '#1e1712' }, undGrad);
+  svg('stop', { offset: '100%', 'stop-color': '#0f0a08' }, undGrad);
+
+  // Sky rect (від верху до surface)
   svg('rect', {
-    x: 0, y: 0, width: SCENE_W, height: SCENE_H, fill: 'url(#sky-gradient)'
+    x: 0, y: 0, width: SCENE_W, height: surfaceRow * TILE_SIZE,
+    fill: 'url(#sky-gradient)'
   }, scene);
 
-  // Tiles
+  // Underground rect (від surface до низу) — тунель показує саме цей темний фон
+  svg('rect', {
+    x: 0, y: surfaceRow * TILE_SIZE,
+    width: SCENE_W, height: SCENE_H - surfaceRow * TILE_SIZE,
+    fill: 'url(#underground-gradient)'
+  }, scene);
+
+  // Tiles (yspвrhx кладемо на background)
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const t = map[y][x];

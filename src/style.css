@@ -83,6 +83,32 @@ body {
   position: absolute;
 }
 
+/* Blockly toolbox — override: dark text on light background,
+   білий текст лише на активній (highlighted) категорії. */
+.blocklyToolboxDiv {
+  background: #ececec !important;
+}
+.blocklyTreeRow {
+  padding: 8px 12px 8px 8px !important;
+  margin: 2px 0 !important;
+  border-radius: 0 4px 4px 0 !important;
+}
+.blocklyTreeLabel {
+  color: #2c2c2c !important;      /* темний текст на світлому фоні */
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+/* Активна (обрана) категорія — Blockly сам ставить color з category.colour у style,
+   але міняє текст на білий. Робимо consistent і збільшуємо контраст. */
+.blocklyTreeSelected .blocklyTreeLabel {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+/* Hover — легка підсвітка */
+.blocklyTreeRow:not(.blocklyTreeSelected):hover {
+  background: #d8d8d8 !important;
+}
+
 #simulator-panel {
   width: 520px;
   min-width: 400px;
